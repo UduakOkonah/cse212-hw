@@ -14,8 +14,9 @@ public static class Recursion
     /// </summary>
     public static int SumSquaresRecursive(int n)
     {
-        // TODO Start Problem 1
-        return 0;
+          if (n <= 0)
+            return 0;
+        return n * n + SumSquaresRecursive(n - 1);
     }
 
     /// <summary>
@@ -39,9 +40,27 @@ public static class Recursion
     /// </summary>
     public static void PermutationsChoose(List<string> results, string letters, int size, string word = "")
     {
-        // TODO Start Problem 2
+        // Base case: desired size reached
+        if (word.Length == size)
+        {
+            results.Add(word);
+            return;
+        }
+
+        // Recursive case: try each remaining letter
+        for (int i = 0; i < letters.Length; i++)
+        {
+            string remaining = letters.Remove(i);
+            PermutationsChoose(results, remaining, size, word + letters[i]);
+        }
     }
 
+    // Helper extension to remove character at an index
+    private static string Remove(this string str, int index)
+    {
+        return str.Substring(0, index) + str.Substring(index + 1);
+    }
+    
     /// <summary>
     /// #############
     /// # Problem 3 #
@@ -86,20 +105,22 @@ public static class Recursion
     /// </summary>
     public static decimal CountWaysToClimb(int s, Dictionary<int, decimal>? remember = null)
     {
-        // Base Cases
-        if (s == 0)
-            return 0;
-        if (s == 1)
-            return 1;
-        if (s == 2)
-            return 2;
-        if (s == 3)
-            return 4;
+        if (remember == null)
+            remember = new Dictionary<int, decimal>();
 
-        // TODO Start Problem 3
+        // Base cases
+        if (s < 0) return 0;
+        if (s == 0) return 1; // 1 way: do nothing
 
-        // Solve using recursion
-        decimal ways = CountWaysToClimb(s - 1) + CountWaysToClimb(s - 2) + CountWaysToClimb(s - 3);
+        // Memoization check
+        if (remember.ContainsKey(s))
+            return remember[s];
+
+        decimal ways = CountWaysToClimb(s - 1, remember) +
+                       CountWaysToClimb(s - 2, remember) +
+                       CountWaysToClimb(s - 3, remember);
+
+        remember[s] = ways;
         return ways;
     }
 
@@ -118,7 +139,18 @@ public static class Recursion
     /// </summary>
     public static void WildcardBinary(string pattern, List<string> results)
     {
-        // TODO Start Problem 4
+        int idx = pattern.IndexOf('*');
+        if (idx == -1)
+        {
+            results.Add(pattern);
+            return;
+        }
+
+        // Replace * with 0
+        WildcardBinary(pattern.Substring(0, idx) + "0" + pattern.Substring(idx + 1), results);
+
+        // Replace * with 1
+        WildcardBinary(pattern.Substring(0, idx) + "1" + pattern.Substring(idx + 1), results);
     }
 
     /// <summary>
@@ -135,9 +167,37 @@ public static class Recursion
         
         // currPath.Add((1,2)); // Use this syntax to add to the current path
 
-        // TODO Start Problem 5
-        // ADD CODE HERE
+        // Mark current position
+        currPath.Add((x, y));
 
-        // results.Add(currPath.AsString()); // Use this to add your path to the results array keeping track of complete maze solutions when you find the solution.
+        // Base case: reached end
+        if (maze.IsEnd(x, y))
+        {
+            results.Add(currPath.AsString());
+            currPath.RemoveAt(currPath.Count - 1); // backtrack
+            return;
+        }
+
+        // Try moving in 4 directions
+        (int dx, int dy)[] directions = new (int, int)[] 
+        { (1, 0), (0, 1), (-1, 0), (0, -1) };
+
+        foreach (var (dx, dy) in directions)
+        {
+            int nx = x + dx, ny = y + dy;
+            if (maze.IsValidMove(currPath, nx, ny))
+            {
+                SolveMaze(results, maze, nx, ny, currPath);
+            }
+        }
+
+        // Backtrack
+        currPath.RemoveAt(currPath.Count - 1);
+    }
+
+    // Helper: convert path to string
+    public static string AsString(this List<ValueTuple<int, int>> path)
+    {
+        return string.Join("->", path.Select(p => $"({p.Item1},{p.Item2})"));
     }
 }
