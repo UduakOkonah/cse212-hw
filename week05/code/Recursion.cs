@@ -50,7 +50,7 @@ public static class Recursion
         // Recursive case: try each remaining letter
         for (int i = 0; i < letters.Length; i++)
         {
-            string remaining = letters.Remove(i);
+            string remaining = letters.Substring(0, i) + letters.Substring(i + 1);
             PermutationsChoose(results, remaining, size, word + letters[i]);
         }
     }
@@ -157,20 +157,18 @@ public static class Recursion
     /// Use recursion to insert all paths that start at (0,0) and end at the
     /// 'end' square into the results list.
     /// </summary>
-    public static void SolveMaze(List<string> results, Maze maze, int x = 0, int y = 0, List<ValueTuple<int, int>>? currPath = null)
+    public static void SolveMaze(List<string> results, Maze maze, int x = 0, int y = 0, List<(int,int)>? currPath = null)
     {
-        // If this is the first time running the function, then we need
-        // to initialize the currPath list.
-        if (currPath == null) {
-            currPath = new List<ValueTuple<int, int>>();
-        }
-        
-        // currPath.Add((1,2)); // Use this syntax to add to the current path
+        currPath ??= new List<(int, int)>();
 
-        // Mark current position
+        // Validate move
+        if (!maze.IsValidMove(currPath, x, y))
+            return;
+
+        // Add current step
         currPath.Add((x, y));
 
-        // Base case: reached end
+        // Base case: found the end
         if (maze.IsEnd(x, y))
         {
             results.Add(currPath.AsString());
@@ -178,25 +176,20 @@ public static class Recursion
             return;
         }
 
-        // Try moving in 4 directions
-        (int dx, int dy)[] directions = new (int, int)[] 
-        { (1, 0), (0, 1), (-1, 0), (0, -1) };
-
-        foreach (var (dx, dy) in directions)
+        // Explore 4 directions
+        (int dx, int dy)[] dirs = { (1,0), (0,1), (-1,0), (0,-1) };
+        foreach (var (dx, dy) in dirs)
         {
-            int nx = x + dx, ny = y + dy;
-            if (maze.IsValidMove(currPath, nx, ny))
-            {
-                SolveMaze(results, maze, nx, ny, currPath);
-            }
+            SolveMaze(results, maze, x + dx, y + dy, currPath);
         }
 
         // Backtrack
         currPath.RemoveAt(currPath.Count - 1);
     }
 
+
     // Helper: convert path to string
-    public static string AsString(this List<ValueTuple<int, int>> path)
+    public static string AsString(this List<(int,int)> path)
     {
         return string.Join("->", path.Select(p => $"({p.Item1},{p.Item2})"));
     }
